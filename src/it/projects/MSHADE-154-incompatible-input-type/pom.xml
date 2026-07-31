@@ -32,39 +32,50 @@ under the License.
   </parent>
 
   <groupId>org.apache.maven.its.shade.mshade154</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>incompatible-input</artifactId>
   <version>1.0</version>
   <packaging>pom</packaging>
 
-  <name>MSHADE-154</name>
-  <description>Test shading an attached artifact selected by classifier.</description>
-
-  <modules>
-    <module>dependency</module>
-    <module>app</module>
-    <module>pom-input</module>
-  </modules>
-
-  <properties>
-    <maven.compiler.release>8</maven.compiler.release>
-  </properties>
+  <name>MSHADE-154 incompatible input</name>
+  <description>Reject replacing a POM main artifact with an attached JAR.</description>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>@version.maven-compiler-plugin@</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>@version.maven-install-plugin@</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>@version.maven-jar-plugin@</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>@version.maven-jar-plugin@</version>
+        <executions>
+          <execution>
+            <id>attach-input</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>thin</classifier>
+              <classesDirectory>${project.basedir}/payload</classesDirectory>
+              <skipIfEmpty>false</skipIfEmpty>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>@project.version@</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <inputClassifier>thin</inputClassifier>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

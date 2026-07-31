@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
@@ -289,8 +290,52 @@ public class ShadeMojoTest extends AbstractMojoTestCase {
         }
     }
 
+    public void testRejectIncompatibleInputArtifactReplacement() throws Exception {
+        TestMavenProject project = new TestMavenProject();
+        project.setArtifact(newArtifact(null, "pom"));
+        Artifact inputArtifact = newArtifact("thin", "jar");
+
+        ShadeMojo mojo = new ShadeMojo();
+        setVariableValueToObject(mojo, "project", project);
+
+        try {
+            mojo.validateInputArtifactOutput(inputArtifact);
+            fail("Expected incompatible input artifact replacement to fail");
+        } catch (MojoExecutionException e) {
+            assertTrue(e.getMessage().contains("main artifact of type 'pom'"));
+            assertTrue(e.getMessage().contains("attached artifact of type 'jar'"));
+            assertTrue(e.getMessage().contains("shadedArtifactAttached=true"));
+        }
+    }
+
+    public void testAllowIncompatibleInputArtifactAsAttachment() throws Exception {
+        TestMavenProject project = new TestMavenProject();
+        project.setArtifact(newArtifact(null, "pom"));
+
+        ShadeMojo mojo = new ShadeMojo();
+        setVariableValueToObject(mojo, "project", project);
+        setVariableValueToObject(mojo, "shadedArtifactAttached", true);
+
+        mojo.validateInputArtifactOutput(newArtifact("thin", "jar"));
+    }
+
+    public void testAllowCompatibleInputArtifactExtension() throws Exception {
+        TestMavenProject project = new TestMavenProject();
+        project.setArtifact(newArtifact(null, "maven-plugin", "jar"));
+
+        ShadeMojo mojo = new ShadeMojo();
+        setVariableValueToObject(mojo, "project", project);
+
+        mojo.validateInputArtifactOutput(newArtifact("thin", "jar"));
+    }
+
     private Artifact newArtifact(String classifier, String type) throws Exception {
-        ArtifactHandler artifactHandler = lookup(ArtifactHandler.class);
+        return newArtifact(classifier, type, type);
+    }
+
+    private Artifact newArtifact(String classifier, String type, String extension) {
+        DefaultArtifactHandler artifactHandler = new DefaultArtifactHandler(type);
+        artifactHandler.setExtension(extension);
         return new DefaultArtifact(
                 "org.apache.maven.its",
                 "test-project",
