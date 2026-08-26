@@ -155,7 +155,7 @@ public class DefaultShader implements Shader {
         }
 
         ModuleInfoProcessor moduleInfoProcessor = null;
-        if (shadeRequest.getModuleInfoMode() == ModuleInfoMode.merge) {
+        if (shadeRequest.getModuleInfoMode() == ModuleInfoMode.MERGE) {
             moduleInfoProcessor = new ModuleInfoProcessor(shadeRequest, logger);
             if (manifestTransformer != null && manifestTransformer.isMultiReleaseExplicitlyEnabled()) {
                 moduleInfoProcessor.enableMultiReleaseOutput();
@@ -182,8 +182,9 @@ public class DefaultShader implements Shader {
                         logger.warn("Configured Multi-Release: false is overridden because module descriptor merging "
                                 + "produces versioned output.");
                     } else {
-                        logger.warn("Configured Multi-Release: false is overridden because shaded input "
-                                + multiReleaseInputs.get(0) + " is a multi-release JAR.");
+                        logger.warn(
+                                "Configured Multi-Release: false is overridden because shaded input {} is a multi-release JAR.",
+                                multiReleaseInputs.get(0));
                     }
                 }
                 forceMultiRelease = true;
